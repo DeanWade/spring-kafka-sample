@@ -19,20 +19,19 @@ public class DynatraceConsumerInterceptor implements ConsumerInterceptor<String,
 
 	@Override
 	public void configure(Map<String, ?> configs) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public ConsumerRecords<String, String> onConsume(ConsumerRecords<String, String> records) {
 		try {
-			// get an instance of the Tagging ADK
 			Tagging tagging = DynaTraceADKFactory.createTagging();
 			
 //			if(!(tagging instanceof DummyTaggingImpl)){
 				
 			tagging.setCustomTag(records.toString().getBytes());
+			
 			tagging.startServerPurePath();
+			
 			System.out.println(tagging.getTagAsString());
 				
 //			}
@@ -44,14 +43,10 @@ public class DynatraceConsumerInterceptor implements ConsumerInterceptor<String,
 
 	@Override
 	public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-		
 	}
 
 }
