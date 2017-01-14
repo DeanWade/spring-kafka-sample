@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class KafkaCommandLineRunner implements CommandLineRunner{
 	
-	//MessageChannel toKafka = context.getBean("toKafka", MessageChannel.class);
 	@Autowired
 	@Qualifier("toKafka")
 	private MessageChannel messageChannel;
@@ -33,7 +32,6 @@ public class KafkaCommandLineRunner implements CommandLineRunner{
 			System.out.println("Sent:" + message);
 			messageChannel.send(message);
 		}
-//		messageChannel.send(new GenericMessage<>(KafkaNull.INSTANCE));
 		
 		Message<?> received = pollableChannel.receive(10000);
 		while (received != null) {

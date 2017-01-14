@@ -32,6 +32,12 @@ public class KafkaConsumerConfig {
 	@Value("${kafka.zookeeper.connect}")
 	private String zookeeperConnect;
 	
+	
+	@Bean("fromKafka")
+	public PollableChannel pollableChannel() {
+		return new QueueChannel();
+	}
+	
 	@Bean
 	public KafkaMessageListenerContainer<String, String> container() throws Exception {
 		return new KafkaMessageListenerContainer<>(consumerFactory(),
@@ -40,6 +46,11 @@ public class KafkaConsumerConfig {
 
 	@Bean
 	public ConsumerFactory<String, String> consumerFactory() {
+		return new DefaultKafkaConsumerFactory<>(consumerConfig());
+	}
+	
+	@Bean
+	public Map<String, Object> consumerConfig() {
 		Map<String, Object> props = new HashMap<>();
 		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.brokerAddress);
 		props.put(ConsumerConfig.GROUP_ID_CONFIG, "siTestGroup");
@@ -48,21 +59,16 @@ public class KafkaConsumerConfig {
 		props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 15000);
 		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-		props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, "org.springframework.integration.samples.kafka.DynatraceConsumerInterceptor");
-		return new DefaultKafkaConsumerFactory<>(props);
+//		props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, "org.springframework.integration.samples.kafka.DynatraceConsumerInterceptor");
+		return props;
 	}
 
 	@Bean
-	public KafkaMessageDrivenChannelAdapter<String, String>
-				adapter(KafkaMessageListenerContainer<String, String> container) {
-		KafkaMessageDrivenChannelAdapter<String, String> kafkaMessageDrivenChannelAdapter =
+	public KafkaMessageDrivenChannelAdapter<String, String> adapter(KafkaMessageListenerContainer<String, String> container) {
+		KafkaMessageDrivenChannelAdapter<String, String> kafkaMessageDrivenChannelAdapter = 
 				new KafkaMessageDrivenChannelAdapter<>(container);
-		kafkaMessageDrivenChannelAdapter.setOutputChannel(received());
+		kafkaMessageDrivenChannelAdapter.setOutputChannel(pollableChannel());
 		return kafkaMessageDrivenChannelAdapter;
 	}
-	
-	@Bean("fromKafka")
-	public PollableChannel received() {
-		return new QueueChannel();
-	}
+
 }

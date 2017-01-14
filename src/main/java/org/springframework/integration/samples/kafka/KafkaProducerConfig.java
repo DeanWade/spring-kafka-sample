@@ -32,11 +32,16 @@ public class KafkaProducerConfig {
 	@Value("${kafka.zookeeper.connect}")
 	private String zookeeperConnect;
 	
-	@ServiceActivator(inputChannel = "toKafka")
+	
+	@Bean("toKafka")
+	QueueChannel queueChannel(){
+		return new QueueChannel();
+	}
+	
 	@Bean
+	@ServiceActivator(inputChannel = "toKafka")
 	public MessageHandler handler() throws Exception {
-		KafkaProducerMessageHandler<String, String> handler =
-				new KafkaProducerMessageHandler<>(kafkaTemplate());
+		KafkaProducerMessageHandler<String, String> handler = new KafkaProducerMessageHandler<>(kafkaTemplate());
 		handler.setTopicExpression(new LiteralExpression(this.topic));
 		handler.setMessageKeyExpression(new LiteralExpression(this.messageKey));
 		return handler;
@@ -49,6 +54,11 @@ public class KafkaProducerConfig {
 
 	@Bean
 	public ProducerFactory<String, String> producerFactory() {
+		return new DefaultKafkaProducerFactory<>(producerConfig());
+	}
+	
+	@Bean
+	public Map<String, Object> producerConfig() {
 		Map<String, Object> props = new HashMap<>();
 		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.brokerAddress);
 		props.put(ProducerConfig.RETRIES_CONFIG, 0);
@@ -57,17 +67,13 @@ public class KafkaProducerConfig {
 		props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
 		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "org.springframework.integration.samples.kafka.DynatraceProducerInterceptor");
-		return new DefaultKafkaProducerFactory<>(props);
+//		props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "org.springframework.integration.samples.kafka.DynatraceProducerInterceptor");
+		return props;
 	}
 	
 	@Bean
 	public KafkaTopicInitializer kafkaTopicInitializer() {
 		return new KafkaTopicInitializer(this.topic, this.zookeeperConnect);
 	}
-	
-	@Bean("toKafka")
-	QueueChannel queueChannel(){
-		return new QueueChannel();
-	}
+
 }
